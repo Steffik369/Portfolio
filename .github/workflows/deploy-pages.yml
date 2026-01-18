@@ -31,7 +31,9 @@ jobs:
         run: dotnet restore ./Portfolio/Portfolio.csproj
 
       - name: Publish
-        run: dotnet publish ./Portfolio/Portfolio.csproj -c Release -o "${{ github.workspace }}/publish"
+        # GitHub Pages is a static host and doesn't do Brotli/gzip negotiation the way ASP.NET does.
+        # Ensure publish output contains the plain .js/.wasm files (not just .br/.gz).
+        run: dotnet publish ./Portfolio/Portfolio.csproj -c Release -o "${{ github.workspace }}/publish" -p:CompressionEnabled=false
 
       - name: Configure published base path + sanity checks
         shell: bash
@@ -53,28 +55,18 @@ jobs:
           # SPA fallback for deep links: GitHub Pages serves 404.html for unknown routes.
           cp "$INDEX_FILE" "$WWWROOT/404.html"
 
-          # .NET 10 publish may emit only compressed boot assets (no plain .js).
-          # GitHub Pages will request _framework/blazor.webassembly.js, so create a tiny shim.
-          BLZ_BOOT_GZ=$(ls "$WWWROOT/_framework"/blazor.webassembly.*.js.gz 2>/dev/null | head -n 1 || true)
-          BLZ_BOOT_BR=$(ls "$WWWROOT/_framework"/blazor.webassembly.*.js.br 2>/dev/null | head -n 1 || true)
-
-          if [ -n "$BLZ_BOOT_GZ" ]; then
-            BLZ_BOOT_BASE=$(basename "$BLZ_BOOT_GZ" .gz)
-          elif [ -n "$BLZ_BOOT_BR" ]; then
-            BLZ_BOOT_BASE=$(basename "$BLZ_BOOT_BR" .br)
-          else
-            echo "Missing blazor.webassembly.*.js.(gz|br) in $WWWROOT/_framework. Contents:";
-            ls -la "$WWWROOT/_framework" || true
+          # Sanity checks: make sure the Blazor boot assets exist as plain .js
+          if ! ls "$WWWROOT/_framework"/blazor.webassembly.*.js >/dev/null 2>&1; then
+            echo "Missing $WWWROOT/_framework/blazor.webassembly.*.js (plain JS)";
+            ls -la "$WWWROOT/_framework" | head -n 200 || true
             exit 1
           fi
 
-          echo "Using boot asset: $BLZ_BOOT_BASE"
-          printf "import './%s';\n" "$BLZ_BOOT_BASE" > "$WWWROOT/_framework/blazor.webassembly.js"
-
-          echo "Created shim:"
-          ls -la "$WWWROOT/_framework/blazor.webassembly.js"
-          echo "Shim contents:"
-          cat "$WWWROOT/_framework/blazor.webassembly.js"
+          if ! ls "$WWWROOT/_framework"/dotnet.*.js >/dev/null 2>&1; then
+            echo "Missing $WWWROOT/_framework/dotnet.*.js";
+            ls -la "$WWWROOT/_framework" | head -n 200 || true
+            exit 1
+          fi
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
