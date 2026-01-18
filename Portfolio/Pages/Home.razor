@@ -1,0 +1,228 @@
+﻿@page "/"
+
+@inject IJSRuntime JS
+
+<PageTitle>Zbyněk Novák</PageTitle>
+
+@{
+    var data = global::Portfolio.Services.PortfolioContent.Get();
+}
+
+<div class="page">
+    <div class="sheet">
+        <header class="header">
+            <div>
+                <h1 class="name">@data.Person.FullName</h1>
+                <div class="role">@data.Person.Title</div>
+
+                <div class="contact">
+                    <span class="item">
+                        <span class="mini-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.08 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.12.86.3 1.7.57 2.5a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.58-1.1a2 2 0 0 1 2.11-.45c.8.27 1.64.45 2.5.57A2 2 0 0 1 22 16.92Z" />
+                            </svg>
+                        </span>
+                        <span>@data.Person.Phone</span>
+                    </span>
+                    <span class="item">
+                        <span class="mini-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                <path d="m22 6-10 7L2 6" />
+                            </svg>
+                        </span>
+                        <a href="mailto:@data.Person.Email">@data.Person.Email</a>
+                    </span>
+                    <span class="item">
+                        <span class="mini-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 10c0 6-9 13-9 13S3 16 3 10a9 9 0 0 1 18 0Z" />
+                                <circle cx="12" cy="10" r="3" />
+                            </svg>
+                        </span>
+                        <span>@data.Person.Location</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <button type="button" class="icon-button print-button" @onclick="Print" aria-label="Download PDF">
+                    <span class="print-icon" aria-hidden="true"></span>
+                </button>
+
+                @if (!string.IsNullOrWhiteSpace(data.Person.AvatarImagePath))
+                {
+                    <img class="avatar @(avatarLoaded ? "is-loaded" : "")"
+                         src="@data.Person.AvatarImagePath"
+                         alt="Portrait"
+                         loading="eager"
+                         decoding="async"
+                         @onload="() => avatarLoaded = true" />
+                }
+            </div>
+        </header>
+
+        <main class="content">
+            <div>
+                <section class="section" id="about">
+                    <h2 class="section-title">About</h2>
+                    <div class="section-body">
+                        @((MarkupString)data.Person.AboutHtml)
+                    </div>
+                </section>
+
+                <section class="section" id="experience">
+                    <h2 class="section-title">Experience</h2>
+
+                    <div class="exp">
+                        @foreach (var item in data.Experience)
+                        {
+                            <div class="exp-item">
+                                <div class="exp-top">
+                                    <div>
+                                        <div class="exp-company">@item.Company</div>
+                                        <div class="exp-role muted">@item.Role</div>
+                                    </div>
+                                    <div class="exp-dates">@item.Dates</div>
+                                </div>
+
+                                @if (item.Bullets.Count > 0)
+                                {
+                                    <ul class="bullets">
+                                        @foreach (var bullet in item.Bullets)
+                                        {
+                                            <li>@bullet</li>
+                                        }
+                                    </ul>
+                                }
+                            </div>
+                        }
+                    </div>
+                </section>
+
+                <section class="section" id="education">
+                    <h2 class="section-title">Education</h2>
+                    <div class="section-body">
+                        @foreach (var edu in data.Education)
+                        {
+                            <div style="font-weight:700;">@edu.School</div>
+                            <div class="muted">@edu.Summary</div>
+
+                            @if (edu.Details.Count > 0)
+                            {
+                                <div class="muted" style="margin-top:6px;">
+                                    @foreach (var detail in edu.Details)
+                                    {
+                                        <div>@detail</div>
+                                    }
+                                </div>
+                            }
+                        }
+                    </div>
+                </section>
+            </div>
+
+            <aside>
+                <section class="section" id="strengths">
+                    <h2 class="section-title">Strengths</h2>
+                    <div class="section-body">
+                        <div class="icon-list">
+                            @foreach (var s in data.Strengths)
+                            {
+                                <div class="icon-row">
+                                    <div class="icon">@s.Icon</div>
+                                    <div>@s.Title</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section" id="hobbies">
+                    <h2 class="section-title">Hobbies</h2>
+                    <div class="section-body">
+                        <div class="icon-list">
+                            @foreach (var h in data.Hobbies)
+                            {
+                                <div class="icon-row">
+                                    <div class="icon">@h.Icon</div>
+                                    <div>@h.Title</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section" id="skills">
+                    <h2 class="section-title">Skills</h2>
+                    <div class="section-body">
+                        <div class="muted" style="font-weight:650;">@data.ExpertSkills.LevelTitle</div>
+                        <div class="chips">
+                            @foreach (var skill in data.ExpertSkills.Skills)
+                            {
+                                <span class="chip">@skill</span>
+                            }
+                        </div>
+
+                        <div style="height:14px;"></div>
+
+                        <div class="muted" style="font-weight:650;">@data.AdvancedSkills.LevelTitle</div>
+                        <div class="chips">
+                            @foreach (var skill in data.AdvancedSkills.Skills)
+                            {
+                                <span class="chip">@skill</span>
+                            }
+                        </div>
+                    </div>
+                </section>
+
+                <section class="section" id="languages">
+                    <h2 class="section-title">Languages</h2>
+                    <div class="section-body">
+                        <div style="display:grid; gap:10px;">
+                            <div style="display:grid; grid-template-columns: 1fr auto; align-items:center; gap:10px;">
+                                <div>@data.Languages.NativeLabel</div>
+                                <Dots Count="@data.Languages.NativeLevelDots" />
+                            </div>
+                            <div style="display:grid; grid-template-columns: 1fr auto; align-items:center; gap:10px;">
+                                <div>@data.Languages.SecondaryLabel</div>
+                                <Dots Count="@data.Languages.SecondaryLevelDots" />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+        </main>
+    </div>
+</div>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Some browsers restore focus to the first focusable element on reload.
+            // Blurring it prevents the "highlighted header" look.
+            await JS.InvokeVoidAsync("PortfolioFocus.blurActiveElement");
+
+            // Drive the avatar transition/animation class for the inline icon as well.
+            avatarLoaded = true;
+            StateHasChanged();
+        }
+    }
+
+    private async Task Print()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("PdfExport.downloadResumePdf", ".sheet", "Zbynek-Novak-Resume.pdf");
+        }
+        catch
+        {
+            // Fallback: still allow user to Save as PDF via the print dialog
+            await JS.InvokeVoidAsync("window.print");
+        }
+    }
+
+    private bool avatarLoaded;
+}

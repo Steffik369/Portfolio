@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zbyněk Novák</title>
+    <meta name="description" content="Portfolio / resume — Zbyněk Novák, Full Stack Developer" />
+
+    <base href="/" />
+    <link rel="preload" id="webassembly" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/app.css" />
+
+    <!-- Tab icon / favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon-csharp.svg" />
+
+    <link href="Portfolio.styles.css" rel="stylesheet" />
+    <script type="importmap"></script>
+</head>
+
+<body>
+    <div id="app">
+        <svg class="loading-progress">
+            <circle r="40%" cx="50%" cy="50%" />
+            <circle r="40%" cx="50%" cy="50%" />
+        </svg>
+        <div class="loading-progress-text"></div>
+    </div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="." class="reload">Reload</a>
+        <span class="dismiss">🗙</span>
+    </div>
+
+    <!-- PDF export (DOM -> canvas -> PDF) -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="js/pdf-export.js"></script>
+
+    <!-- Prevent initial auto-focus highlight on first load -->
+    <script src="js/focus-fix.js"></script>
+
+    <script>
+        // Enable heavyweight background effects only after first paint + Blazor boot.
+        // This avoids transient dark/black blob artifacts during startup on some GPUs/browsers.
+        requestAnimationFrame(() => document.body.classList.add('app-ready'));
+    </script>
+
+    <script src="_framework/blazor.webassembly.js"></script>
+</body>
+
+</html>
