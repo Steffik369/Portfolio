@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Simple C# favicon: dark tile + white "C#". No external fonts required. -->
+  <rect x="4" y="4" width="56" height="56" rx="12" fill="#512BD4"/>
+
+  <!-- "C" -->
+  <path d="M30.2 23.2c-4.8-3.6-12.6-.7-12.6 8.8s7.8 12.4 12.6 8.8" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- "#" -->
+  <g stroke="#ffffff" stroke-width="4" stroke-linecap="round">
+    <line x1="40" y1="22" x2="38" y2="42"/>
+    <line x1="48" y1="22" x2="46" y2="42"/>
+    <line x1="36" y1="28" x2="52" y2="28"/>
+    <line x1="35" y1="36" x2="51" y2="36"/>
+  </g>
+</svg>
