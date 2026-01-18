@@ -33,22 +33,32 @@ jobs:
       - name: Publish
         run: dotnet publish ./Portfolio/Portfolio.csproj -c Release -o "${{ github.workspace }}/publish"
 
-      - name: Rewrite base href for GitHub Pages
+      - name: Configure published base path + sanity checks
         shell: bash
         run: |
+          set -euo pipefail
           REPO_NAME="${{ github.event.repository.name }}"
-          INDEX_FILE="${{ github.workspace }}/publish/wwwroot/index.html"
+          WWWROOT="${{ github.workspace }}/publish/wwwroot"
+          INDEX_FILE="$WWWROOT/index.html"
+
           if [ ! -f "$INDEX_FILE" ]; then
             echo "index.html not found at $INDEX_FILE";
-            ls -la "${{ github.workspace }}/publish/wwwroot" || true
+            ls -la "$WWWROOT" || true
             exit 1
           fi
-          sed -i "s|<base href=\"/\" />|<base href=\"/${REPO_NAME}/\" />|g" "$INDEX_FILE"
 
-      - name: SPA fallback (404.html)
-        shell: bash
-        run: |
-          cp "${{ github.workspace }}/publish/wwwroot/index.html" "${{ github.workspace }}/publish/wwwroot/404.html"
+          # Rewrite base href for GitHub Pages (served under /<repo-name>/)
+          perl -0777 -i -pe "s#<base\s+href=\"[^\"]*\"\s*/?>#<base href=\"/${REPO_NAME}/\" />#g" "$INDEX_FILE"
+
+          # SPA fallback for deep links: GitHub Pages serves 404.html for unknown routes.
+          cp "$INDEX_FILE" "$WWWROOT/404.html"
+
+          # Quick sanity check: published output should contain the hashed boot script.
+          if ! ls "$WWWROOT/_framework"/blazor.webassembly.*.js >/dev/null 2>&1; then
+            echo "Missing blazor.webassembly.*.js in $WWWROOT/_framework. Contents:";
+            ls -la "$WWWROOT/_framework" || true
+            exit 1
+          fi
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
