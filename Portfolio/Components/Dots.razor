@@ -1,0 +1,21 @@
+@namespace Portfolio.Components
+
+<div style="display:flex; gap:6px; align-items:center;">
+    @for (var i = 1; i <= Max; i++)
+    {
+        <span style="
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            display: inline-block;
+            border: 1px solid var(--line);
+            background: @(i <= Count ? "var(--text)" : "transparent");
+            opacity: @(i <= Count ? "1" : "0.35");
+        "></span>
+    }
+</div>
+
+@code {
+    [Parameter] public int Count { get; set; }
+    [Parameter] public int Max { get; set; } = 5;
+}
