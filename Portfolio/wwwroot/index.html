@@ -55,10 +55,12 @@
     </script>
 
     <!--
-      .NET 10+ publishes hashed boot assets under _framework (e.g. blazor.webassembly.<hash>.js).
-      With OverrideHtmlAssetPlaceholders=true, this placeholder gets rewritten during publish.
+      Load the boot module via importmap; on static hosts (GitHub Pages)
+      the non-hashed alias _framework/blazor.webassembly.js may not exist.
     -->
-    <script src="_framework/blazor.webassembly.js"></script>
+    <script type="module">
+        import './_framework/blazor.webassembly.js';
+    </script>
 </body>
 
 </html>
