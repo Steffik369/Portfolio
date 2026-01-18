@@ -35,7 +35,7 @@ jobs:
         # Ensure publish output contains the plain .js/.wasm files (not just .br/.gz).
         run: dotnet publish ./Portfolio/Portfolio.csproj -c Release -o "${{ github.workspace }}/publish" -p:CompressionEnabled=false
 
-      - name: Configure published base path + sanity checks
+      - name: Configure published base path + SPA fallback + boot script alias
         shell: bash
         run: |
           set -euo pipefail
@@ -55,13 +55,25 @@ jobs:
           # SPA fallback for deep links: GitHub Pages serves 404.html for unknown routes.
           cp "$INDEX_FILE" "$WWWROOT/404.html"
 
-          # Sanity checks: make sure the Blazor boot assets exist as plain .js
-          if ! ls "$WWWROOT/_framework"/blazor.webassembly.*.js >/dev/null 2>&1; then
+          # Ensure the non-hashed boot script exists (some hosts/pages setups request it directly)
+          BOOT_HASHED=$(ls -1 "$WWWROOT/_framework"/blazor.webassembly.*.js 2>/dev/null | head -n 1 || true)
+          if [ -z "$BOOT_HASHED" ]; then
             echo "Missing $WWWROOT/_framework/blazor.webassembly.*.js (plain JS)";
             ls -la "$WWWROOT/_framework" | head -n 200 || true
             exit 1
           fi
 
+          cp -f "$BOOT_HASHED" "$WWWROOT/_framework/blazor.webassembly.js"
+
+          # Keep brotli/gzip siblings if present (harmless when CompressionEnabled=false)
+          if [ -f "${BOOT_HASHED}.br" ]; then
+            cp -f "${BOOT_HASHED}.br" "$WWWROOT/_framework/blazor.webassembly.js.br"
+          fi
+          if [ -f "${BOOT_HASHED}.gz" ]; then
+            cp -f "${BOOT_HASHED}.gz" "$WWWROOT/_framework/blazor.webassembly.js.gz"
+          fi
+
+          # Sanity checks: make sure the Blazor boot assets exist as plain .js
           if ! ls "$WWWROOT/_framework"/dotnet.*.js >/dev/null 2>&1; then
             echo "Missing $WWWROOT/_framework/dotnet.*.js";
             ls -la "$WWWROOT/_framework" | head -n 200 || true

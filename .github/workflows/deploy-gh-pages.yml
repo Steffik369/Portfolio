@@ -1,9 +1,10 @@
-name: Deploy to GitHub Pages
+name: Deploy to GitHub Pages (legacy - disabled)
 
 on:
-  push:
-    branches: [ "main" ]
   workflow_dispatch:
+
+# This workflow is intentionally disabled (no push trigger).
+# Use .github/workflows/deploy-pages.yml instead.
 
 permissions:
   contents: read
@@ -30,14 +31,11 @@ jobs:
       - name: Publish
         run: dotnet publish Portfolio/Portfolio.csproj -c Release -o dist
 
-      # GitHub Pages serves your site from /<repo-name>/
-      # This rewrites <base href="/"> to <base href="/<repo-name>/">
       - name: Rewrite base href
         run: |
           REPO_NAME="${{ github.event.repository.name }}"
           sed -i "s|<base href=\"/\" />|<base href=\"/${REPO_NAME}/\" />|" dist/wwwroot/index.html
 
-      # SPA fallback for client-side routing
       - name: Add 404 fallback
         run: cp dist/wwwroot/index.html dist/wwwroot/404.html
 
