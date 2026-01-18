@@ -24,8 +24,8 @@ public static class PortfolioContent
                     LinkedInUrl: null,
                     GitHubUrl: null
                 ),
-                AvatarImagePath: "/avatarFoto.jpg",
-                ResumeDownloadPath: "/resume/Zbynek-Novak-Resume.pdf"
+                AvatarImagePath: "avatarFoto.jpg",
+                ResumeDownloadPath: "resume/Zbynek-Novak-Resume.pdf"
             ),
             Experience: new List<ExperienceItem>
             {
