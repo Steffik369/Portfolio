@@ -69,9 +69,12 @@ jobs:
           fi
 
           echo "Using boot asset: $BLZ_BOOT_BASE"
-          cat > "$WWWROOT/_framework/blazor.webassembly.js" <<EOF
-          import './${BLZ_BOOT_BASE}';
-          EOF
+          printf "import './%s';\n" "$BLZ_BOOT_BASE" > "$WWWROOT/_framework/blazor.webassembly.js"
+
+          echo "Created shim:"
+          ls -la "$WWWROOT/_framework/blazor.webassembly.js"
+          echo "Shim contents:"
+          cat "$WWWROOT/_framework/blazor.webassembly.js"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
