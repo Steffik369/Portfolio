@@ -1,0 +1,730 @@
+/* Design tokens */
+:root {
+    /* Dark single theme */
+    --bg: #070a12;
+    --text: rgba(255,255,255,0.92);
+    --muted: rgba(255,255,255,0.62);
+    --line: rgba(255,255,255,0.12);
+    --chip: rgba(255,255,255,0.08);
+    --accent: #7dd3fc;
+
+    --page-max: 1040px;
+    --radius: 16px;
+
+    --font: "Exo 2", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+    --shadow: 0 28px 80px rgba(0,0,0,0.55);
+
+    /* Background accents (aurora blobs) */
+    --bg-grad-1: rgba(125, 211, 252, 0.22);  /* cyan */
+    --bg-grad-2: rgba(167, 139, 250, 0.18);  /* violet */
+    --bg-grad-3: rgba(244, 114, 182, 0.14);  /* pink */
+
+    /* Texture */
+    --noise-opacity: 0.065;
+    --noise-contrast: 135%;
+
+    --font-display: "Exo 2", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+    /* Avatar crop/zoom tuning */
+    --avatar-zoom: 1.12;
+    --avatar-pos-x: 50%;
+    --avatar-pos-y: 35%;
+}
+
+html, body {
+    height: 100%;
+
+    overflow: hidden;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    /* Space base + color blobs (kept static; motion comes from ::after) */
+    background:
+        radial-gradient(ellipse at bottom, #0b1322 0%, #06070d 100%),
+        radial-gradient(1100px 520px at 10% -10%, var(--bg-grad-1), transparent 60%),
+        radial-gradient(900px 520px at 90% 0%, var(--bg-grad-2), transparent 62%),
+        radial-gradient(1000px 640px at 55% 115%, var(--bg-grad-3), transparent 55%);
+
+    background-attachment: fixed;
+    color: var(--text);
+    line-height: 1.45;
+}
+
+/* Avoid startup paint artifacts: keep expensive blended/blurred layers off until the app is mounted */
+body:not(.app-ready)::before,
+body:not(.app-ready)::after {
+    display: none;
+}
+
+/* Add an animated aurora layer behind the grain */
+body::after {
+    content: "";
+    position: fixed;
+    inset: -40vh -30vw;
+    pointer-events: none;
+    z-index: -1;
+
+    background:
+        radial-gradient(closest-side at 20% 30%, rgba(125,211,252,0.22), transparent 60%),
+        radial-gradient(closest-side at 70% 25%, rgba(167,139,250,0.18), transparent 62%),
+        radial-gradient(closest-side at 45% 70%, rgba(244,114,182,0.14), transparent 60%),
+        radial-gradient(closest-side at 85% 75%, rgba(34,211,238,0.14), transparent 62%);
+
+    filter: blur(38px) saturate(130%);
+    opacity: 0.9;
+    transform: translate3d(0,0,0);
+    animation: aurora-drift 18s ease-in-out infinite alternate;
+    mix-blend-mode: screen;
+}
+
+@keyframes aurora-drift {
+    0%   { transform: translate3d(-2%, -1%, 0) scale(1.03); }
+    50%  { transform: translate3d(2.5%, 1.5%, 0) scale(1.06) rotate(1deg); }
+    100% { transform: translate3d(-1%, 2%, 0) scale(1.08) rotate(-1deg); }
+}
+
+/* Subtle noise overlay (grain) */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+
+    opacity: var(--noise-opacity);
+    filter: contrast(var(--noise-contrast));
+
+    background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='.32'/%3E%3C/svg%3E"),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.28' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
+
+    background-size: 220px 220px, 300px 300px;
+    background-repeat: repeat;
+    mix-blend-mode: soft-light;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body::after { animation: none; }
+}
+
+/* Starfield layers (generated via box-shadow lists) */
+.stars {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -2; /* behind aurora and grain */
+    overflow: hidden;
+}
+
+.stars1,
+.stars2,
+.stars3 {
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: transparent;
+    width: 1px;
+    height: 1px;
+    transform: translateZ(0);
+}
+
+.stars1 {
+    opacity: 0.75;
+    animation: star-drift 70s linear infinite;
+    box-shadow:
+        15vw 10vh rgba(255,255,255,0.80), 27vw 35vh rgba(255,255,255,0.70), 42vw 14vh rgba(255,255,255,0.65),
+        58vw 22vh rgba(255,255,255,0.70), 64vw 80vh rgba(255,255,255,0.55), 71vw 55vh rgba(255,255,255,0.65),
+        83vw 18vh rgba(255,255,255,0.70), 92vw 62vh rgba(255,255,255,0.60), 6vw 78vh rgba(255,255,255,0.55),
+        12vw 52vh rgba(255,255,255,0.65), 19vw 86vh rgba(255,255,255,0.55), 33vw 74vh rgba(255,255,255,0.55),
+        48vw 92vh rgba(255,255,255,0.55), 55vw 66vh rgba(255,255,255,0.60), 68vw 95vh rgba(255,255,255,0.50),
+        77vw 88vh rgba(255,255,255,0.55), 89vw 40vh rgba(255,255,255,0.60), 95vw 12vh rgba(255,255,255,0.70),
+        2vw 20vh rgba(255,255,255,0.60), 9vw 30vh rgba(255,255,255,0.55), 23vw 8vh rgba(255,255,255,0.70),
+        36vw 28vh rgba(255,255,255,0.60), 46vw 40vh rgba(255,255,255,0.55), 61vw 6vh rgba(255,255,255,0.70),
+        74vw 6vh rgba(255,255,255,0.70), 81vw 36vh rgba(255,255,255,0.55), 97vw 92vh rgba(255,255,255,0.50);
+}
+
+.stars2 {
+    width: 2px;
+    height: 2px;
+    opacity: 0.55;
+    animation: star-drift 120s linear infinite;
+    box-shadow:
+        8vw 14vh rgba(255,255,255,0.55), 18vw 44vh rgba(255,255,255,0.45), 30vw 20vh rgba(255,255,255,0.45),
+        41vw 62vh rgba(255,255,255,0.40), 53vw 10vh rgba(255,255,255,0.50), 66vw 34vh rgba(255,255,255,0.40),
+        78vw 72vh rgba(255,255,255,0.38), 90vw 28vh rgba(255,255,255,0.45), 96vw 84vh rgba(255,255,255,0.35),
+        5vw 86vh rgba(255,255,255,0.35), 24vw 92vh rgba(255,255,255,0.32), 59vw 88vh rgba(255,255,255,0.32);
+}
+
+.stars3 {
+    width: 3px;
+    height: 3px;
+    opacity: 0.35;
+    animation: star-drift 180s linear infinite;
+    box-shadow:
+        12vw 18vh rgba(255,255,255,0.35), 38vw 8vh rgba(255,255,255,0.28), 57vw 40vh rgba(255,255,255,0.26),
+        73vw 16vh rgba(255,255,255,0.26), 86vw 58vh rgba(255,255,255,0.22), 94vw 24vh rgba(255,255,255,0.26),
+        22vw 68vh rgba(255,255,255,0.22), 44vw 86vh rgba(255,255,255,0.22);
+}
+
+/* Duplicate the star layers below so the animation loops seamlessly */
+.stars1::after,
+.stars2::after,
+.stars3::after {
+    content: "";
+    position: absolute;
+    top: 110vh;
+    left: 0;
+    width: inherit;
+    height: inherit;
+    background: transparent;
+    box-shadow: inherit;
+}
+
+@keyframes star-drift {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-110vh); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .stars1,
+    .stars2,
+    .stars3 {
+        animation: none;
+    }
+}
+
+/* Ensure the actual app content sits above the background overlay */
+#app,
+.app,
+.page,
+.sheet {
+    position: relative;
+    z-index: 1;
+}
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+a:hover { text-decoration: underline; }
+
+/* App wrapper */
+.app {
+    padding: 28px 18px 60px;
+
+    /* Scroll happens here instead of the document to avoid bounce */
+    height: 100dvh;
+    overflow-y: auto;
+    overscroll-behavior-y: none;
+
+    /* Smooth on iOS */
+    -webkit-overflow-scrolling: touch;
+}
+
+.page {
+    max-width: var(--page-max);
+    margin: 0 auto;
+}
+
+.sheet {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+
+    /* glassy card */
+    background: rgba(12, 16, 28, 0.72);
+    box-shadow: var(--shadow);
+    overflow: clip;
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    animation: sheet-enter 2000ms both;
+}
+
+@keyframes sheet-enter {
+    from {
+        opacity: 0;
+        transform: translateY(0px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sheet { animation: none; }
+}
+
+/* Header */
+.header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 18px;
+    padding: 28px;
+    align-items: start;
+    border-bottom: 1px solid var(--line);
+    background:
+        radial-gradient(1200px 460px at 80% 0%, rgba(255,255,255,0.06), transparent 60%),
+        radial-gradient(900px 380px at 20% 0%, rgba(255,255,255,0.03), transparent 62%);
+}
+
+.name {
+    font-size: clamp(28px, 3.2vw, 40px);
+    font-family: var(--font-display);
+    letter-spacing: 0.02em;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.role {
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.contact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    margin-top: 14px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.contact .item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.avatar {
+    width: 98px;
+    height: 98px;
+    display: block;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: transparent;
+    object-fit: cover;
+    object-position: var(--avatar-pos-x) var(--avatar-pos-y);
+    transform: none;
+    opacity: 0;
+    transition: opacity 180ms ease-out, border-color 180ms ease-out;
+}
+
+/* Zoom only the painted image, not the element box */
+@supports (object-view-box: inset(0)) {
+    .avatar {
+        object-view-box: inset(
+            calc((1 - (1 / var(--avatar-zoom))) * 50%)
+        );
+    }
+}
+
+.avatar.is-loaded {
+    opacity: 1;
+    border-color: var(--line);
+}
+
+/* Small monochrome inline icons (contact) */
+.mini-icon {
+    width: 14px;
+    height: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.88);
+    flex: 0 0 auto;
+}
+
+.mini-icon svg {
+    width: 14px;
+    height: 14px;
+    display: block;
+}
+
+/* Header right side */
+.header-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    position: relative;
+}
+
+/* Small header icon button (Print/Download) */
+.icon-button {
+    height: 36px;
+    min-width: 36px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Download/export icon */
+.print-icon {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    position: relative;
+    opacity: 0.95;
+}
+
+/* Arrow stem */
+.print-icon::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 2px;
+    width: 2px;
+    height: 8px;
+    background: currentColor;
+    transform: translateX(-50%);
+    border-radius: 2px;
+}
+
+/* Arrow head + tray */
+.print-icon::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 7px;
+    width: 8px;
+    height: 8px;
+    transform: translateX(-50%) rotate(45deg);
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    border-radius: 1px;
+}
+
+/* Add a subtle tray line */
+.print-button .print-icon {
+    /* reserve space for tray using box-shadow line */
+}
+
+.print-button .print-icon {
+    /* tray */
+}
+
+.print-button .print-icon {
+    box-shadow: 0 12px 0 -8px currentColor;
+}
+
+/* Label is no longer used */
+.print-label { display: none; }
+
+@media (max-width: 520px) {
+    .icon-button { min-width: 36px; }
+}
+
+/* Main two-column layout */
+.content {
+    display: grid;
+    grid-template-columns: 1.55fr 1fr;
+    gap: 30px;
+    padding: 26px 28px 30px;
+}
+
+@media (max-width: 900px) {
+    .header {
+        grid-template-columns: 1fr;
+        align-items: center;
+        text-align: left;
+    }
+
+    .avatar {
+        width: 86px;
+        height: 86px;
+    }
+
+    .content {
+        grid-template-columns: 1fr;
+    }
+}
+
+.section {
+    margin-bottom: 22px;
+}
+
+.section:last-child {
+    margin-bottom: 0;
+}
+
+.section-title {
+    font-size: 13px;
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid rgba(255,255,255,0.85);
+}
+
+.section-body {
+    margin-top: 12px;
+    color: var(--text);
+    font-size: 14px;
+}
+
+.muted { color: var(--muted); }
+
+/* Experience */
+.exp {
+    margin-top: 10px;
+}
+
+.exp-item {
+    padding: 10px 0 14px;
+    border-bottom: 1px solid var(--line);
+}
+
+.exp-item:last-child {
+    border-bottom: none;
+}
+
+.exp-top {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: baseline;
+}
+
+.exp-role {
+    font-weight: 650;
+}
+
+.exp-company {
+    font-weight: 700;
+}
+
+.exp-dates {
+    color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.bullets {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    color: var(--muted);
+}
+
+.bullets li { margin: 4px 0; }
+
+/* Chips (skills) */
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.chip {
+    border-bottom: 2px solid var(--line);
+    padding: 6px 10px;
+    font-weight: 650;
+    font-size: 12px;
+    background: rgba(255,255,255,0.02);
+}
+
+/* Icon + text list */
+.icon-list {
+    display: grid;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.icon-row {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 12px;
+    align-items: center;
+}
+
+.icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    display: grid;
+    place-items: center;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.icon svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+
+/* Footer actions (kept for general buttons, not used in header anymore) */
+.actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--text);
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.button:hover {
+    border-color: rgba(0,0,0,0.25);
+    text-decoration: none;
+}
+
+
+/* Blazor error UI (keep but make it theme-aware) */
+#blazor-error-ui {
+    color-scheme: light only;
+    background: #fff3cd;
+    color: #1b1f24;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
+
+/* Print (Save as PDF) */
+@media print {
+    /* Remove app chrome/background layers */
+    html, body {
+        overflow: visible !important;
+        height: auto !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+
+    body::before,
+    body::after,
+    .stars {
+        display: none !important;
+    }
+
+    /* Print should be a single page-like sheet */
+    .app {
+        height: auto !important;
+        overflow: visible !important;
+        padding: 0 !important;
+    }
+
+    .page {
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .sheet {
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        background: #ffffff !important;
+    }
+
+    /* Hide the print button itself */
+    .print-button {
+        display: none !important;
+    }
+
+    a {
+        color: #000000 !important;
+        text-decoration: none !important;
+    }
+
+    /* Avoid awkward breaks */
+    .exp-item,
+    section {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    @page {
+        margin: 14mm;
+    }
+}
+
+/* Wrapper used for full-page capture (background + content) */
+.capture-root {
+    position: relative;
+    min-height: 100dvh;
+}
+
+/* When exporting to PDF, freeze animations/transforms that can render incorrectly in html2canvas */
+.pdf-capture *,
+.pdf-capture *::before,
+.pdf-capture *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+}
+
+.pdf-capture body::after {
+    /* avoid blur+blend artifacts during capture */
+    mix-blend-mode: normal !important;
+    filter: blur(28px) saturate(120%) !important;
+}
+
+.pdf-capture .stars1,
+.pdf-capture .stars2,
+.pdf-capture .stars3 {
+    animation: none !important;
+    transform: none !important;
+}
+
+a:focus,
+button:focus,
+.icon-button:focus {
+    outline: none;
+}
+
+a:focus-visible,
+button:focus-visible,
+.icon-button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+/* Option A: If the startup loader creates a distracting 'spot', hide it completely. */
+#app .loading-progress,
+#app .loading-progress-text {
+    display: none;
+}

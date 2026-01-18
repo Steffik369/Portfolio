@@ -3,3 +3,26 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
+
+# --- Added ---
+# Node
+node_modules/
+**/node_modules/
+
+# Publish output
+/dist/
+**/dist/
+
+# .NET build artifacts
+**/*.user
+**/*.suo
+**/*.userosscache
+**/*.sln.docstates
+
+# IDE
+.idea/
+.vs/
+.vscode/
+
+# macOS
+.DS_Store
