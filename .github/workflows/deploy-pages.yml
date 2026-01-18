@@ -53,12 +53,25 @@ jobs:
           # SPA fallback for deep links: GitHub Pages serves 404.html for unknown routes.
           cp "$INDEX_FILE" "$WWWROOT/404.html"
 
-          # Quick sanity check: published output should contain the hashed boot script.
-          if ! ls "$WWWROOT/_framework"/blazor.webassembly.*.js >/dev/null 2>&1; then
-            echo "Missing blazor.webassembly.*.js in $WWWROOT/_framework. Contents:";
+          # .NET 10 publish may emit only compressed boot assets (no plain .js).
+          # GitHub Pages will request _framework/blazor.webassembly.js, so create a tiny shim.
+          BLZ_BOOT_GZ=$(ls "$WWWROOT/_framework"/blazor.webassembly.*.js.gz 2>/dev/null | head -n 1 || true)
+          BLZ_BOOT_BR=$(ls "$WWWROOT/_framework"/blazor.webassembly.*.js.br 2>/dev/null | head -n 1 || true)
+
+          if [ -n "$BLZ_BOOT_GZ" ]; then
+            BLZ_BOOT_BASE=$(basename "$BLZ_BOOT_GZ" .gz)
+          elif [ -n "$BLZ_BOOT_BR" ]; then
+            BLZ_BOOT_BASE=$(basename "$BLZ_BOOT_BR" .br)
+          else
+            echo "Missing blazor.webassembly.*.js.(gz|br) in $WWWROOT/_framework. Contents:";
             ls -la "$WWWROOT/_framework" || true
             exit 1
           fi
+
+          echo "Using boot asset: $BLZ_BOOT_BASE"
+          cat > "$WWWROOT/_framework/blazor.webassembly.js" <<EOF
+          import './${BLZ_BOOT_BASE}';
+          EOF
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
