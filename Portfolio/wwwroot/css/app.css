@@ -630,9 +630,36 @@ a:hover { text-decoration: underline; }
     html, body {
         overflow: visible !important;
         height: auto !important;
+
+        /* Keep print as black on white paper */
         background: #ffffff !important;
         color: #000000 !important;
+
+        /* NOTE: On some browsers (esp. Safari), enabling print-color-adjust can lead to washed out or missing text.
+           Keep it off and force contrast via explicit colors below. */
+        /* -webkit-print-color-adjust: exact; */
+        /* print-color-adjust: exact; */
     }
+
+    /* Force all text inside the resume sheet to print as true black */
+    .sheet,
+    .sheet * {
+        color: #000000 !important;
+        text-shadow: none !important;
+        opacity: 1 !important;
+        filter: none !important;
+    }
+
+    /* Keep links readable as plain text */
+    a,
+    a:visited {
+        color: #000000 !important;
+        text-decoration: none !important;
+    }
+
+    /* Borders/dividers should be dark too */
+    .section-title { border-bottom-color: #000000 !important; }
+    .exp-item { border-bottom-color: #000000 !important; }
 
     body::before,
     body::after,
@@ -675,6 +702,18 @@ a:hover { text-decoration: underline; }
     section {
         break-inside: avoid;
         page-break-inside: avoid;
+    }
+
+    /* Make the language dots visible in print/PDF */
+    .dot {
+        border-color: #000000 !important;
+        background: transparent !important;
+        opacity: 0.35 !important;
+    }
+
+    .dot.is-filled {
+        background: #000000 !important;
+        opacity: 1 !important;
     }
 
     @page {
@@ -727,4 +766,26 @@ button:focus-visible,
 #app .loading-progress,
 #app .loading-progress-text {
     display: none;
+}
+
+/* Language level dots */
+.dots {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    display: inline-block;
+    border: 1px solid var(--line);
+    background: transparent;
+    opacity: 0.35;
+}
+
+.dot.is-filled {
+    background: var(--text);
+    opacity: 1;
 }

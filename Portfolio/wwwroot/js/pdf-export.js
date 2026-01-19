@@ -196,7 +196,23 @@
         page++;
       }
 
-      pdf.save(file);
+      // Instead of pdf.save() (can be blocked on some browsers), create a Blob and trigger a download.
+      const blob = pdf.output("blob");
+      const blobUrl = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = file;
+      a.rel = "noopener";
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      // Revoke later to allow the download to start.
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 30_000);
+
+      return;
     } catch (e) {
       console.error("[PdfExport] PDF export failed", e);
       // Throw a useful message up to Blazor

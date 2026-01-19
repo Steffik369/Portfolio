@@ -213,15 +213,7 @@
 
     private async Task Print()
     {
-        try
-        {
-            await JS.InvokeVoidAsync("PdfExport.downloadResumePdf", ".sheet", "Zbynek-Novak-Resume.pdf");
-        }
-        catch
-        {
-            // Fallback: still allow user to Save as PDF via the print dialog
-            await JS.InvokeVoidAsync("window.print");
-        }
+        await JS.InvokeVoidAsync("window.print");
     }
 
     private bool avatarLoaded;
